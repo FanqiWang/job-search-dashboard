@@ -1,0 +1,9 @@
+# Personal data lives here at runtime and must never be committed.
+data/state/
+data/scout/*
+!data/scout/inbox.example.json
+
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
