@@ -1,10 +1,10 @@
 # Job Search Dashboard
 
-**A job search that remembers your decisions.**
+**One place to sort, research and track the jobs that fit you.**
 
 An AI agent can find you twenty promising roles in an afternoon. The hard part comes after: deciding which ones deserve your time, remembering what you already ruled out, and not letting a deadline or a follow-up slip while you prepare for the next interview.
 
-This dashboard is the place where those decisions happen. Your agent brings a shortlist, with a score for each role, why it might fit, and what to watch out for. You decide in one click what to pursue, then track applications, deadlines, contacts and follow-ups in the same place. When you sync, your decisions go back to the agent, so the next scout run can skip what you have already seen.
+This dashboard brings all of that into one place. Your agent searches against your own profile (the roles, locations and deal-breakers you wrote down) and brings back a shortlist: a score for each role, why it might fit, and what to watch out for. You sort it in one click, ask the agent to research the roles worth a closer look, and track applications, deadlines, contacts and follow-ups right next to its notes. When you sync, your decisions go back to the agent, so the next search skips what you have already seen.
 
 I built it for my own job search, so it also has weekly planning for the days when the search feels endless. If you only want to track applications, there is a simple mode. It works with any AI agent, or with none at all: you can add jobs by hand.
 
@@ -19,6 +19,7 @@ It runs on your computer. No account, no server to host, nothing to install for 
 ## What you get
 
 - **A review queue that respects your time.** New roles arrive grouped by company and sorted by score. Each one shows why it might fit, what to watch out for, salary, location and skill gaps. **Process**, **Prepare to apply**, **Later** or **Ignore**: one click each.
+- **Research where you need it.** Write your questions on a role, and your agent's notes on the team, the funding and how to apply appear right in the job's details.
 - **A pipeline you can see at a glance.** Every role you are pursuing, from evaluating to offer, with deadlines and your own follow-up dates.
 - **Nothing falls through the cracks.** Deadlines in the next two weeks and follow-ups that are due show up on the front page and on a calendar.
 - **A memory across searches.** Your decisions are recorded in a ledger, so a role you passed on last month does not come back next week.
