@@ -25,6 +25,12 @@ Everything stays on your machine: it is a static web page with no backend, no ac
 
 All data in the screenshots is fictional.
 
+## Full or simple
+
+Not interested in planning your week inside the dashboard? Switch to **simple mode** (button at the bottom of the sidebar, or the Data page). It keeps only job tracking: the review queue, your pipeline, deadlines, follow-ups and contacts. The weekly task lists, workstreams and weekly review are hidden. Both modes use the same data, so you can switch back at any time without losing anything. You can also open the page as `app/index.html?mode=simple`.
+
+![Simple mode: only job tracking](docs/images/simple-mode.png)
+
 ## Quick start
 
 **Just look around:** download or clone this repository and double-click `app/index.html`. It opens with fictional demo data; clear it from the banner at the top when you are ready to start.
@@ -104,6 +110,9 @@ Both scripts print what they would do and change nothing unless you pass `--writ
 - **Your agent sees what you give it.** If you use a cloud AI agent, your profile and the job data it reads are sent to that provider under its own terms.
 
 ## FAQ
+
+**Can I use it just to track applications?**
+Yes: switch to simple mode (see [Full or simple](#full-or-simple)). Your choice is remembered in this browser.
 
 **Do I need an AI agent?**
 No. You can add jobs, contacts and tasks by hand with the **+ New** button. The agent just fills the review queue for you.

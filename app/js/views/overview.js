@@ -72,3 +72,47 @@ function overviewView(weekTasks) {
     </div>
     <div class="grid workstreams">${TASK_LINES.map(workstreamPanel).join("")}</div>`;
 }
+
+// Simple mode: the overview is about jobs only.
+function simpleOverviewView() {
+  const queue = state.jobs
+    .filter((j) => !j.archived && j.status === STATUS.TO_REVIEW && j.scout?.review_disposition !== "withdrawn")
+    .sort((a, b) => (b.scout?.total || 0) - (a.scout?.total || 0));
+  const top = queue.slice(0, 4).map(
+    (j) => `
+      <div class="row">
+        <div class="grow">
+          ${orgBadge(j)}<strong class="score">${esc(j.scout?.total ?? "—")}</strong> <b>${esc(j.title)}</b> — ${esc(j.detail)}
+          ${j.scout?.location ? `<div class="meta">${esc(j.scout.location)}</div>` : ""}
+        </div>
+        <button class="small" data-edit="jobs:${esc(j.id)}">Details</button>
+      </div>`,
+  );
+  const soon = upcomingDeadlines(state);
+  const follow = dueFollowUps();
+  return `
+    <div class="grid">
+      <div>
+        <div class="panel accent">
+          <h2>To review · ${queue.length}</h2>
+          <p class="meta">New jobs from your scout, best score first.
+            <button class="small linkish" data-view="jobs" data-jump="inbox">Open the review queue ›</button></p>
+          ${top.join("") || empty("Nothing to review. New jobs from your scout appear here.")}
+        </div>
+        ${starPanel(true)}
+      </div>
+      <div>
+        <div class="panel" id="soonPanel">
+          <h2>Deadlines in the next two weeks</h2>
+          <p class="meta">Jobs you have not applied to yet whose deadline is within 14 days (or already passed).
+            <button class="small linkish" data-view="calendar">Open calendar ›</button></p>
+          ${soon.map(calendarRow).join("") || empty("No known deadlines in the next two weeks.")}
+        </div>
+        <div class="panel" id="followPanel">
+          <h2>Follow-ups due</h2>
+          <p class="meta">Jobs and contacts whose “next follow-up” date is today or earlier.</p>
+          ${follow.map(followUpRow).join("") || empty("No follow-ups due.")}
+        </div>
+      </div>
+    </div>`;
+}

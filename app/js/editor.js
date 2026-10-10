@@ -74,7 +74,7 @@ function openEditor(kind, id) {
   $("#editTitle").textContent = id ? "Edit" : { tasks: "New task", jobs: "New job", contacts: "New contact" }[kind];
   $("#archive").hidden = !id;
   $("#archive").textContent = item.archived ? "Restore" : "Archive";
-  const links = kind === "tasks" ? taskJobsBlock(item) : kind === "jobs" && id ? jobTasksBlock(item) : "";
+  const links = kind === "tasks" ? taskJobsBlock(item) : kind === "jobs" && id && !isSimple() ? jobTasksBlock(item) : "";
   const scout = kind === "jobs" && item.scout ? `<div class="wide scout-block">${scoutDetail(item)}</div>` : "";
   const fields = FIELDS[kind].map(
     (f) => `<label class="${WIDE_FIELDS.includes(f[0]) ? "wide" : ""}">${f[1]}${fieldInput(item, f)}</label>`,

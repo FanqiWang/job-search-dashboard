@@ -62,3 +62,14 @@ test("upcomingDeadlines skips applied, ended and archived jobs", () => {
   const ids = [...m.upcomingDeadlines(state, 14, "2026-10-10").map((i) => i.x.id)];
   assert.deepEqual(ids, ["missed", "soon"]);
 });
+
+test("simple mode hides the task and review pages only", () => {
+  for (const v of ["overview", "jobs", "calendar", "contacts", "data"]) assert.ok(m.viewAllowed(v, "simple"), v);
+  assert.ok(!m.viewAllowed("tasks", "simple"));
+  assert.ok(!m.viewAllowed("review", "simple"));
+  assert.ok(m.viewAllowed("tasks", "full"));
+  assert.equal(m.modeFromQuery("?mode=simple"), "simple");
+  assert.equal(m.modeFromQuery("?x=1&mode=full"), "full");
+  assert.equal(m.modeFromQuery("?mode=other"), null);
+  assert.equal(m.modeFromQuery(""), null);
+});

@@ -7,7 +7,7 @@ const vm = require("node:vm");
 const APP = path.resolve(__dirname, "../../app");
 
 function load(...files) {
-  const context = vm.createContext({ console });
+  const context = vm.createContext({ console, URLSearchParams });
   for (const file of files) {
     vm.runInContext(fs.readFileSync(path.join(APP, file), "utf8"), context, { filename: file });
   }

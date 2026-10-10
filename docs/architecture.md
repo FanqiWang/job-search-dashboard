@@ -48,6 +48,10 @@ No framework and no build step: the page loads a handful of classic `<script>` f
 - Importing a backup or loading the demo first downloads a backup of the current data.
 - When a folder is connected, `save()` also schedules a write of `data/state/dashboard-state.json` (debounced by 0.8 s).
 
+### Modes
+
+`mode` in `main.js` is `full` or `simple`. Simple mode hides the views listed in `SIMPLE_HIDDEN_VIEWS` (`model.js`), swaps the overview for a jobs-only version (`simpleOverviewView`), and makes **+ New** create jobs. The mode is a display preference stored under its own `localStorage` key (`job-search-dashboard/mode`), not part of your data, so backups and the state file are identical in both modes. `?mode=simple` or `?mode=full` in the URL sets it.
+
 ### Folder sync
 
 The File System Access API only works on secure origins, which includes `http://localhost` but not `file://`. That is why `serve.py` exists. The chosen folder handle is stored in IndexedDB, and the browser asks for permission again on each visit. On connect (and on "Import inbox now"), the dashboard reads `data/scout/inbox.json`, every `data/scout/inbox-<engine>.json` and `data/scout/research.json`, merges them, then writes the state file. Sync is paused while demo data is loaded, so demo jobs never reach your ledger.

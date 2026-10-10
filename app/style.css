@@ -77,6 +77,19 @@ nav button.active {
 .aside-foot span {
   opacity: 0.6;
 }
+.mode-toggle {
+  margin-bottom: 14px;
+  background: transparent;
+  color: #d3e1da;
+  border-color: #ffffff33;
+}
+.mode-toggle:hover {
+  background: #ffffff14;
+}
+.mode-switch {
+  display: flex;
+  gap: 8px;
+}
 
 main {
   margin-left: 250px;
@@ -248,7 +261,7 @@ mark {
 
 .stats {
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
   gap: 16px;
   margin-bottom: 25px;
 }
@@ -989,9 +1002,6 @@ dialog::backdrop {
 /* ---------- Responsive ---------- */
 
 @media (max-width: 1250px) {
-  .stats {
-    grid-template-columns: repeat(3, 1fr);
-  }
   .inbox-columns {
     grid-template-columns: 1fr;
   }

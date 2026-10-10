@@ -58,6 +58,9 @@ async function main() {
   await page.dispatchEvent("#week", "change");
   await shot("weekly-review");
 
+  await page.click("#modeToggle");
+  await shot("simple-mode");
+
   await browser.close();
 }
 

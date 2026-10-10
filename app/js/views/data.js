@@ -8,6 +8,18 @@ function dataView() {
   return `
     <div class="grid">
       <div class="panel">
+        <h2>Mode</h2>
+        <p><b>Full</b> has everything: job tracking plus weekly task lists, workstreams and a weekly review.
+          <b>Simple</b> keeps only job tracking: the review queue, your pipeline, deadlines and contacts.</p>
+        <p class="meta">Both modes use the same data, so you can switch at any time without losing anything.
+          You can also open the page with <code>?mode=simple</code> or <code>?mode=full</code> in the address.</p>
+        <div class="mode-switch" role="group" aria-label="Mode">
+          <button id="modeFull" class="${isSimple() ? "" : "primary"}" aria-pressed="${!isSimple()}">Full</button>
+          <button id="modeSimple" class="${isSimple() ? "primary" : ""}" aria-pressed="${isSimple()}">Simple</button>
+        </div>
+      </div>
+
+      <div class="panel">
         <h2>Backups</h2>
         <p>Everything is saved automatically in this browser (localStorage). Switching browsers, moving this folder, or clearing
           site data can lose it, so export a backup now and then.</p>

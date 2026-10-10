@@ -52,6 +52,21 @@ const CONTACT_STATUS = {
 const CONTACT_STATUSES = Object.values(CONTACT_STATUS);
 const CONTACT_KINDS = ["Referral", "Recruiter", "Alumni", "Mentor", "Other"];
 
+// The dashboard has two modes. "simple" keeps only job tracking: no weekly
+// task lists, workstreams or weekly reviews. Both modes use the same data.
+const MODES = ["full", "simple"];
+const SIMPLE_HIDDEN_VIEWS = ["tasks", "review"];
+
+function viewAllowed(view, mode) {
+  return mode !== "simple" || !SIMPLE_HIDDEN_VIEWS.includes(view);
+}
+
+// Reads ?mode=simple or ?mode=full from a URL query string.
+function modeFromQuery(search) {
+  const m = new URLSearchParams(search || "").get("mode");
+  return MODES.includes(m) ? m : null;
+}
+
 // Statuses after which a "next follow-up" date no longer needs attention.
 const FOLLOW_UP_DONE = [STATUS.PASSED, STATUS.CLOSED, STATUS.HIRED, CONTACT_STATUS.DONE];
 

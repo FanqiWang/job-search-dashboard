@@ -2,6 +2,9 @@
 // Loaded last; the view functions it calls live in js/views/.
 
 const STORAGE_KEY = "job-search-dashboard/state";
+// The mode is a display preference, kept apart from your data so that
+// clearing data or importing a backup does not change it.
+const MODE_KEY = "job-search-dashboard/mode";
 
 // ---------------------------------------------------------------------------
 // UI state
@@ -18,6 +21,7 @@ let editing = null;
 let calMonth = today().slice(0, 7);
 let lastPlace = "";
 let lastRollWeek = mondayOf();
+let mode = "full";
 
 const VIEW_TITLES = {
   overview: "Move today forward a little.",
@@ -36,6 +40,8 @@ const inFilter = (x) => (!region || x.market === region) && matchQuery(x);
 function newId() {
   return window.crypto?.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
+
+const isSimple = () => mode === "simple";
 
 // ---------------------------------------------------------------------------
 // Loading and saving
@@ -57,6 +63,28 @@ function loadState() {
     state = emptyState();
     storageError = "Could not read your saved data, so nothing will be saved over it. Import a valid backup to continue.";
   }
+}
+
+function loadMode() {
+  const fromUrl = modeFromQuery(location.search);
+  try {
+    if (fromUrl) localStorage.setItem(MODE_KEY, fromUrl);
+    mode = fromUrl || (MODES.includes(localStorage.getItem(MODE_KEY)) ? localStorage.getItem(MODE_KEY) : "full");
+  } catch (e) {
+    mode = fromUrl || "full";
+  }
+}
+
+function setMode(next) {
+  mode = next;
+  try {
+    localStorage.setItem(MODE_KEY, mode);
+  } catch (e) {
+    // The mode then only lasts until the page is reloaded.
+  }
+  if (!viewAllowed(view, mode)) view = "overview";
+  $("#filters").dataset.key = "";
+  render();
 }
 
 function save() {
@@ -120,7 +148,9 @@ function rollOverNow() {
 function renderStats(weekTasks) {
   const jobs = state.jobs.filter((j) => !j.archived);
   const tiles = [
-    [`${weekTasks.filter(isDone).length}/${weekTasks.length}`, "Tasks done this week", "tasks", ""],
+    isSimple()
+      ? [state.jobs.filter((j) => j.starred && !j.archived && !starHandled(j)).length, "Starred to do", "jobs", "star"]
+      : [`${weekTasks.filter(isDone).length}/${weekTasks.length}`, "Tasks done this week", "tasks", ""],
     [`${jobs.filter((j) => j.status === STATUS.TO_REVIEW).length} / ${jobs.length}`, "To review / all jobs", "jobs", "inbox"],
     [jobs.filter((j) => APPLIED_STATUSES.includes(j.status)).length, "Applied, incl. interviews", "jobs", "applied"],
     [jobs.filter((j) => j.status === STATUS.INTERVIEWING).length, "Interviewing", "jobs", "applied"],
@@ -146,7 +176,9 @@ function renderFilters() {
   }
   el.dataset.key = key;
   const archivedToggle = `<label><input id="archived" type="checkbox" ${showArchived ? "checked" : ""}> Show archived</label>`;
-  if (["overview", "tasks", "review"].includes(view)) {
+  if (view === "overview" && isSimple()) {
+    el.innerHTML = "";
+  } else if (["overview", "tasks", "review"].includes(view)) {
     el.innerHTML = `
       <label>Week of <input type="date" id="week" value="${week}"></label>
       <span class="meta">Pick today's tasks by dependency, urgency, value and energy; ☆ adds a task to today.</span>
@@ -188,9 +220,14 @@ function render() {
   }
   $("#date").textContent = formatLongDate(new Date());
   $("#title").textContent = VIEW_TITLES[view];
-  document.querySelectorAll("nav button").forEach((b) => b.classList.toggle("active", b.dataset.view === view));
+  document.body.classList.toggle("simple", isSimple());
+  document.querySelectorAll("nav button").forEach((b) => {
+    b.classList.toggle("active", b.dataset.view === view);
+    b.hidden = !viewAllowed(b.dataset.view, mode);
+  });
+  $("#modeToggle").textContent = isSimple() ? "Switch to full mode" : "Switch to simple mode";
   $("#add").hidden = ["review", "data", "calendar"].includes(view);
-  $("#add").textContent = view === "jobs" ? "+ New job" : view === "contacts" ? "+ New contact" : "+ New task";
+  $("#add").textContent = addKind() === "jobs" ? "+ New job" : addKind() === "contacts" ? "+ New contact" : "+ New task";
 
   const weekTasks = state.tasks.filter((t) => !!t.archived === (view === "tasks" && showArchived) && taskInWeek(t, week));
   renderBanner();
@@ -198,7 +235,7 @@ function render() {
   renderFilters();
 
   const content = $("#content");
-  if (view === "overview") content.innerHTML = overviewView(weekTasks);
+  if (view === "overview") content.innerHTML = isSimple() ? simpleOverviewView() : overviewView(weekTasks);
   if (view === "tasks") content.innerHTML = tasksView(weekTasks);
   if (view === "calendar") content.innerHTML = calendarView();
   if (view === "review") content.innerHTML = reviewView();
@@ -231,8 +268,14 @@ function scrollToPanel(key) {
 // Actions
 // ---------------------------------------------------------------------------
 
+// What the "+ New" button creates on the current page.
+function addKind() {
+  if (["jobs", "contacts"].includes(view)) return view;
+  return isSimple() ? "jobs" : "tasks";
+}
+
 function showView(name, jump) {
-  view = name;
+  view = viewAllowed(name, mode) ? name : "overview";
   query = "";
   showArchived = false;
   $("#filters").dataset.key = "";
@@ -287,7 +330,10 @@ function startTitleEdit(el) {
 }
 
 const CLICK_ACTIONS = {
-  add: () => openEditor(["jobs", "contacts"].includes(view) ? view : "tasks"),
+  add: () => openEditor(addKind()),
+  modeToggle: () => setMode(isSimple() ? "full" : "simple"),
+  modeFull: () => setMode("full"),
+  modeSimple: () => setMode("simple"),
   close: () => $("#editor").close(),
   export: exportBackup,
   backup: exportBackup,
@@ -486,6 +532,7 @@ document.addEventListener(
 // Startup
 // ---------------------------------------------------------------------------
 
+loadMode();
 loadState();
 if (!storageError && rollOver(state) && !state.demo) save();
 render();
