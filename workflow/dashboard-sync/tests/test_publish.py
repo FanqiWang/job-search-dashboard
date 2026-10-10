@@ -1,81 +1,112 @@
-"""End-to-end invariants for the shared Dashboard hand-off."""
+"""Publishing scout results: validation, deduplication and carry-over."""
 
 import json
-import os
-import subprocess
-import sys
 import tempfile
 import unittest
-from datetime import datetime, timedelta
+from datetime import date, timedelta
 from pathlib import Path
-from zoneinfo import ZoneInfo
+
+from helpers import make_project, read, run, write
+
+TODAY = date.today()
 
 
-SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "publish.py"
+def role(ident, age=5, **extra):
+    return {
+        "opportunity_id": ident,
+        "employer": "Example Co",
+        "title": "ML Engineer",
+        "url": f"https://example.org/jobs/{ident}",
+        "posted_at": (TODAY - timedelta(days=age)).isoformat(),
+        "score_total": 80,
+        "scores": {"interest": 20, "capability": 20, "attainability": 20, "role_quality": 20},
+        **extra,
+    }
 
 
 class PublishTests(unittest.TestCase):
-    def test_freshness_decisions_and_engine_isolation(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp)
-            shared = root / "data/scout"
-            shared.mkdir(parents=True)
-            state_dir = root / "data/state"
-            state_dir.mkdir(parents=True)
-            today = datetime.now(ZoneInfo("America/New_York")).date()
-            checked_at = datetime.now(ZoneInfo("America/New_York")).isoformat()
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = make_project(Path(self.temp.name))
+        self.results = self.root / "results.json"
 
-            def role(ident, age, *, exception=False, evidence=True):
-                return {
-                    "opportunity_id": ident,
-                    "employer": "Example",
-                    "title": "Research Scientist",
-                    "category": "long_term",
-                    "canonical_url": f"https://example.org/jobs/{ident}",
-                    "posting_status": "Officially verified",
-                    "checked_at": checked_at,
-                    "posted_at": (today - timedelta(days=age)).isoformat(),
-                    "posting_date_evidence": "official dated page" if evidence else None,
-                    "freshness_status": "ongoing_exception" if exception else "new_14d",
-                    "ongoing_hiring_evidence": "official evergreen statement" if exception else None,
-                    "eligibility_status": "Unknown",
-                    "scores": {"interest": 4, "capability": 4, "attainability": 3, "role_quality": 4, "total": 75},
-                }
+    def tearDown(self):
+        self.temp.cleanup()
 
-            run = {
-                "schema_version": "5.2.3",
-                "run_kind": "discovery",
-                "run_id": "test-discovery",
-                "engine": "codex",
-                "checked_at": checked_at,
-                "scope": "US",
-                "score_contract": {
-                    "weights": {k: 0.25 for k in ("interest", "capability", "attainability", "role_quality")},
-                    "salary_in_total": False,
-                    "display_threshold": 70,
-                },
-                "long_term": [role("fresh", 5), role("undated-evidence", 8, evidence=False), role("old", 45), role("evergreen", 45, exception=True), role("already", 5), role("user-pass", 5)],
-                "bridge": [],
-            }
-            source = root / "results.json"
-            source.write_text(json.dumps(run), encoding="utf-8")
-            (state_dir / "dashboard-state.json").write_text(json.dumps({"jobs": [{"id": "scout-already", "url": "https://example.org/jobs/already", "scout": {"opportunity_id": "already"}}]}), encoding="utf-8")
-            claude_path = shared / "inbox-claude.json"
-            claude_path.write_text('{"jobs":[{"opportunity_id":"claude-only"}]}', encoding="utf-8")
-            (shared / "exploring-ledger.jsonl").write_text(json.dumps({"opportunity_id": "user-pass", "status": "User pass", "source": "dashboard"}) + "\n", encoding="utf-8")
-            cmd = [sys.executable, str(SCRIPT), "--root", str(root), "--results", str(source)]
-            env = dict(os.environ, PYTHONIOENCODING="utf-8")
-            preview = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", env=env, check=True)
-            self.assertFalse((shared / "inbox-codex.json").exists())
-            self.assertEqual(json.loads(preview.stdout)["new_or_current"], 2)
-            subprocess.run(cmd + ["--write"], capture_output=True, text=True, encoding="utf-8", env=env, check=True)
-            payload = json.loads((shared / "inbox-codex.json").read_text(encoding="utf-8"))
-            self.assertEqual({j["opportunity_id"] for j in payload["jobs"]}, {"fresh", "evergreen"})
-            self.assertEqual(payload["generated_by"], "codex")
-            self.assertEqual(json.loads(claude_path.read_text(encoding="utf-8"))["jobs"][0]["opportunity_id"], "claude-only")
-            self.assertEqual(len(json.loads((state_dir / "dashboard-state.json").read_text(encoding="utf-8"))["jobs"]), 1)
-            second = subprocess.run(cmd + ["--write"], capture_output=True, text=True, encoding="utf-8", env=env, check=True)
-            self.assertTrue(json.loads(second.stdout)["unchanged"])
+    def publish(self, jobs, *extra, **results_fields):
+        write(self.results, {"generated_by": "scout-a", "run_id": "run-1", "jobs": jobs, **results_fields})
+        result = run("publish.py", self.root, "--results", str(self.results), *extra)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        return json.loads(result.stdout)
+
+    def test_validation_rules(self):
+        jobs = [
+            role("ok"),
+            role("evergreen", age=90, ongoing_hiring_evidence="Careers page says always hiring"),
+            role("old", age=45),
+            role("future", age=-2),
+            role("low", score_total=60, scores={"interest": 15, "capability": 15, "attainability": 15, "role_quality": 15}),
+            role("bad-sum", score_total=95),
+            role("too-big", score_total=80, scores={"interest": 30, "capability": 20, "attainability": 20, "role_quality": 10}),
+            role("http", url="http://example.org/x"),
+            role("ineligible", eligible=False),
+            role("undated", posted_at=None),
+            {"employer": "No id"},
+        ]
+        summary = self.publish(jobs, "--write")
+        inbox = read(self.root / "data/scout/inbox.json")
+        self.assertEqual({j["opportunity_id"] for j in inbox["jobs"]}, {"ok", "evergreen", "undated"})
+        self.assertEqual(len(summary["skipped"]), 8)
+        self.assertEqual(inbox["generated_by"], "scout-a")
+        self.assertTrue(all(j["engine"] == "scout-a" for j in inbox["jobs"]))
+
+    def test_skips_known_and_decided_jobs_and_is_idempotent(self):
+        write(self.root / "data/state/dashboard-state.json", {"jobs": [
+            {"id": "scout-in-state", "scout": {"opportunity_id": "in-state"}},
+            {"id": "manual-1", "url": "https://example.org/jobs/same-url/"},
+        ]})
+        (self.root / "data/scout/ledger.jsonl").write_text(json.dumps({"opportunity_id": "passed", "status": "User pass"}) + "\n", encoding="utf-8")
+        jobs = [role("fresh"), role("in-state"), role("same-url"), role("passed")]
+        preview = self.publish(jobs)
+        self.assertEqual(preview["new"], 1)
+        self.assertFalse((self.root / "data/scout/inbox.json").exists(), "a preview writes nothing")
+        self.publish(jobs, "--write")
+        self.assertEqual([j["opportunity_id"] for j in read(self.root / "data/scout/inbox.json")["jobs"]], ["fresh"])
+        self.assertTrue(self.publish(jobs, "--write")["unchanged"])
+
+    def test_engine_inboxes_are_separate(self):
+        write(self.root / "data/scout/inbox.json", {"jobs": [{"opportunity_id": "someone-else"}]})
+        self.publish([role("mine")], "--engine", "local.llm_2", "--write")
+        self.assertEqual(read(self.root / "data/scout/inbox-local.llm_2.json")["generated_by"], "local.llm_2")
+        self.assertEqual(read(self.root / "data/scout/inbox.json")["jobs"], [{"opportunity_id": "someone-else"}])
+        bad = run("publish.py", self.root, "--results", str(self.results), "--engine", "a/b")
+        self.assertNotEqual(bad.returncode, 0)
+
+    def test_carries_over_unimported_jobs_and_merges_revisions(self):
+        stale = role("stale", age=40)
+        write(self.root / "data/scout/inbox.json", {
+            "jobs": [role("waiting", score_total=75, scores={"interest": 20, "capability": 20, "attainability": 20, "role_quality": 15}), stale],
+            "revisions": [{"opportunity_id": "x", "disposition": "below", "review_reason": "old"}],
+        })
+        summary = self.publish([role("new")], "--write", revisions=[{"opportunity_id": "x", "disposition": "triaged_out"}])
+        self.assertEqual(summary["carried_over"], 1)
+        self.assertEqual([d["opportunity_id"] for d in summary["dropped_from_previous_inbox"]], ["stale"])
+        inbox = read(self.root / "data/scout/inbox.json")
+        self.assertEqual([j["opportunity_id"] for j in inbox["jobs"]], ["new", "waiting"], "sorted by score")
+        self.assertEqual(inbox["revisions"], [{"opportunity_id": "x", "disposition": "triaged_out"}])
+
+    def test_example_inbox_passes(self):
+        example = Path(__file__).resolve().parents[3] / "data/scout/inbox.example.json"
+        payload = json.loads(example.read_text(encoding="utf-8"))
+        for job in payload["jobs"]:
+            job["posted_at"] = TODAY.isoformat()
+        write(self.results, payload)
+        result = run("publish.py", self.root, "--results", str(self.results))
+        self.assertEqual(json.loads(result.stdout)["skipped"], [])
+
+    def test_rejects_a_malformed_results_file(self):
+        self.results.write_text('{"no": "jobs"}', encoding="utf-8")
+        self.assertNotEqual(run("publish.py", self.root, "--results", str(self.results)).returncode, 0)
 
 
 if __name__ == "__main__":
