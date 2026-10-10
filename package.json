@@ -1,0 +1,16 @@
+{
+  "name": "job-search-dashboard",
+  "private": true,
+  "description": "A local-first job search dashboard. The app itself has no dependencies; this file only defines dev scripts.",
+  "license": "MIT",
+  "scripts": {
+    "start": "python serve.py",
+    "test": "node --test \"tests/js/*.test.js\" && python -m unittest discover -s workflow/dashboard-sync/tests",
+    "test:js": "node --test \"tests/js/*.test.js\"",
+    "test:py": "python -m unittest discover -s workflow/dashboard-sync/tests",
+    "screenshots": "node tools/screenshots.js"
+  },
+  "devDependencies": {
+    "playwright": "1.56.1"
+  }
+}

@@ -1,5 +1,81 @@
-<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>求职工作台</title><link rel="stylesheet" href="style.css?v=20261009quickref"></head><body>
-<aside><div class="brand">J<span> / </span>WORKSPACE</div><p class="sub">求职工作台</p><nav aria-label="工作台导航"><button data-view="overview" class="active">◉　总览与今日</button><button data-view="tasks">☑　每周双清单</button><button data-view="jobs">▤　机会与投递</button><button data-view="calendar">▦　日历与截止</button><button data-view="contacts">◎　联系人跟进</button><button data-view="review">↗　每周复盘</button><button data-view="files">▧　资料与备份</button></nav><div class="aside-foot">边找边准备<br><span>一步一步往前推进</span></div></aside>
-<main><header><div><div class="eyebrow" id="date"></div><h1 id="title">把今天往前推进一点。</h1></div><div class="toolbar"><span id="saveStatus" role="status">本机保存</span><button id="export">导出备份</button><button class="primary" id="add">＋ 新增任务</button></div></header><p id="notice" class="notice">本机独立记录；不会自动同步 Excel、Markdown 或其他浏览器。请定期导出备份。</p><section id="stats" class="stats"></section><div id="filters" class="filters"></div><section id="content"></section><footer>计划不等于完成。保留真实进展，也给恢复留出空间。</footer></main>
-<dialog id="editor"><form id="editForm"><div class="dialog-head"><h2 id="editTitle"></h2><button type="button" id="close" aria-label="关闭">×</button></div><div id="fields"></div><div class="dialog-actions"><button type="button" id="archive">归档此记录</button><button class="primary" type="submit">保存记录</button></div></form></dialog>
-<input type="file" id="importFile" accept="application/json,.json" hidden><script src="seed.js?v=20261009taskjoblink"></script><script src="app.js?v=20261009taskjoblink"></script></body></html>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Job Search Dashboard</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23183e35'/%3E%3Ctext x='16' y='22' font-size='17' font-family='sans-serif' font-weight='700' text-anchor='middle' fill='%23c9da89'%3EJ%3C/text%3E%3C/svg%3E">
+    <link rel="stylesheet" href="style.css">
+  </head>
+  <body>
+    <aside>
+      <div class="brand">J<span> / </span>WORKSPACE</div>
+      <p class="sub">Job search dashboard</p>
+      <nav aria-label="Dashboard sections">
+        <button data-view="overview" class="active"><span class="nav-ico" aria-hidden="true">◉</span>Overview</button>
+        <button data-view="tasks"><span class="nav-ico" aria-hidden="true">☑</span>Weekly lists</button>
+        <button data-view="jobs"><span class="nav-ico" aria-hidden="true">▤</span>Jobs</button>
+        <button data-view="calendar"><span class="nav-ico" aria-hidden="true">▦</span>Calendar</button>
+        <button data-view="contacts"><span class="nav-ico" aria-hidden="true">◎</span>Contacts</button>
+        <button data-view="review"><span class="nav-ico" aria-hidden="true">↗</span>Weekly review</button>
+        <button data-view="data"><span class="nav-ico" aria-hidden="true">▧</span>Data</button>
+      </nav>
+      <div class="aside-foot">
+        <button id="modeToggle" class="small mode-toggle">Switch to simple mode</button>
+        <div>Prepare while you search.<br><span>One step at a time.</span></div>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div>
+          <div class="eyebrow" id="date"></div>
+          <h1 id="title"></h1>
+        </div>
+        <div class="toolbar">
+          <span id="saveStatus" role="status">Saved in this browser</span>
+          <button id="export">Export backup</button>
+          <button class="primary" id="add">+ New task</button>
+        </div>
+      </header>
+      <p id="notice" class="notice">Your data stays in this browser. Nothing is sent anywhere. Export a backup now and then, or connect a folder on the Data page.</p>
+      <div id="banner"></div>
+      <section id="stats" class="stats"></section>
+      <div id="filters" class="filters"></div>
+      <section id="content"></section>
+      <footer>Plans are not progress. Record what really happened, and leave room to recover.</footer>
+    </main>
+
+    <dialog id="editor">
+      <form id="editForm">
+        <div class="dialog-head">
+          <h2 id="editTitle"></h2>
+          <button type="button" id="close" aria-label="Close">×</button>
+        </div>
+        <div id="fields"></div>
+        <div class="dialog-actions">
+          <button type="button" id="archive">Archive</button>
+          <button class="primary" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <input type="file" id="importFile" accept="application/json,.json" hidden>
+
+    <!-- Plain scripts, no build step. Order matters: data model first, app shell last. -->
+    <script src="js/model.js"></script>
+    <script src="js/matching.js"></script>
+    <script src="js/inbox.js"></script>
+    <script src="seed.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/folder.js"></script>
+    <script src="js/views/tasks.js"></script>
+    <script src="js/views/overview.js"></script>
+    <script src="js/views/jobs.js"></script>
+    <script src="js/views/calendar.js"></script>
+    <script src="js/views/contacts.js"></script>
+    <script src="js/views/review.js"></script>
+    <script src="js/views/data.js"></script>
+    <script src="js/editor.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

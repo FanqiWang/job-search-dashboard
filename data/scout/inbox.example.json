@@ -1,13 +1,15 @@
 {
   "version": 1,
-  "generated_by": "claude",
+  "generated_at": "2026-10-03T09:00:00-07:00",
+  "generated_by": "example-agent",
+  "run_id": "example-run-001",
   "jobs": [
     {
       "opportunity_id": "example-acme-ml-123",
       "employer": "Acme Robotics",
       "title": "Machine Learning Engineer, Data Platform",
       "url": "https://example.com/careers/123",
-      "market": "美国",
+      "market": "US",
       "category": "fte",
       "location": "Seattle, WA (hybrid)",
       "posted_at": "2026-10-01",
@@ -27,7 +29,7 @@
       "employer_about": "Builds perception systems for warehouse robots.",
       "highlight": "Pipeline-heavy role; a natural bridge from backend work.",
       "risk": "Small team; ask about research publication policy.",
-      "engine": "claude",
+      "engine": "example-agent",
       "run_id": "example-run-001"
     }
   ],

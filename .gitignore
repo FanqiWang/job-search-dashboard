@@ -1,8 +1,13 @@
-# Personal data lives here at runtime and must never be committed.
-data/state/
+# Your own profile and everything under data/ stay on your machine.
+workflow/profile.md
+data/*
+!data/.gitkeep
+!data/scout/
 data/scout/*
 !data/scout/inbox.example.json
 
+# Tooling
+node_modules/
 __pycache__/
 *.pyc
 .DS_Store
