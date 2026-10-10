@@ -10,6 +10,8 @@ I built it for my own job search, so it also has weekly planning for the days wh
 
 It runs on your computer. No account, no server to host, nothing to install for the dashboard itself.
 
+**[Try the live demo →](https://fanqiwang.github.io/job-search-dashboard/app/)** It opens with fictional data and runs entirely in your browser; nothing you click is sent anywhere.
+
 *Designed by [Fanqi Wang](https://github.com/FanqiWang), built with [Claude Code](https://claude.com/claude-code). See [About](#about).*
 
 ![The review queue: new roles grouped by company and sorted by score, each with why it fits, what to watch out for, and one-click decisions](docs/images/review-queue.png)
@@ -28,7 +30,7 @@ It runs on your computer. No account, no server to host, nothing to install for 
 
 ## Quick start
 
-**Just look around.** Download this repository (the green **Code** button → **Download ZIP**, then unzip it) or clone it, and double-click `app/index.html`. It opens with fictional demo data, so you can click around right away. When you are ready to start for real, click **Clear demo data and start fresh** in the banner at the top.
+**Just look around.** Open the [live demo](https://fanqiwang.github.io/job-search-dashboard/app/), or download this repository (the green **Code** button → **Download ZIP**, then unzip it) or clone it, and double-click `app/index.html`. It opens with fictional demo data, so you can click around right away. When you are ready to start for real, click **Clear demo data and start fresh** in the banner at the top.
 
 ```sh
 git clone https://github.com/FanqiWang/job-search-dashboard.git
