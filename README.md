@@ -2,6 +2,8 @@
 
 **A local-first dashboard for a job search, built to work with any AI agent.**
 
+*Designed by [Fanqi Wang](https://github.com/FanqiWang), built with [Claude Code](https://claude.com/claude-code). See [About](#about).*
+
 Your agent scouts for roles that fit you and scores them. You review them in one click, track applications, deadlines and contacts, plan your week, and write a weekly review. Your decisions flow back to the agent so it never suggests the same job twice.
 
 Everything stays on your machine: it is a static web page with no backend, no account, no analytics and no dependencies.
@@ -144,6 +146,10 @@ npm install && npx playwright install chromium && npm run screenshots   # regene
 ```
 
 See [`docs/architecture.md`](docs/architecture.md) for how the code is organized, and [`docs/data-formats.md`](docs/data-formats.md) for every file format.
+
+## About
+
+This project was designed by [Fanqi Wang](https://github.com/FanqiWang): the idea, the scout → review → sync workflow, the features, and every product decision. It grew out of a dashboard Fanqi built for a personal job search. The code, tests, documentation and screenshots were written by [Claude Code](https://claude.com/claude-code), Anthropic's AI coding agent, working from Fanqi's design and review.
 
 ## License
 
