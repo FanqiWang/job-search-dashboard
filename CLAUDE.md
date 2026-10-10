@@ -1,40 +1,47 @@
-# Project brief: open-source job search dashboard
+# Project guide for AI agents
+
+Notes for any AI coding agent working in this repository. For what the project is and how people use it, read `README.md` first.
 
 ## What this is
 
-A local-first job search dashboard extracted from a private, personal setup. It is a static web app (vanilla HTML/CSS/JS, no build step, no backend) that keeps everything in the browser's localStorage and can optionally read and write a local folder through the File System Access API (Chrome/Edge).
+A local-first job search dashboard: a static web page (`app/`) that keeps its data in the browser's `localStorage` and can sync with a local folder through the File System Access API. An AI agent scouts for jobs and writes them to `data/scout/inbox*.json`; the user reviews them in the dashboard; Python scripts record the decisions in a ledger. The file formats are in `docs/data-formats.md`, and the code layout is in `docs/architecture.md`.
 
-The workflow it supports:
+## Ground rules
 
-1. An AI agent runs a **scout** (see `workflow/job-scout/SKILL.md`): it finds roles that fit a candidate profile, scores them, and writes them to `data/scout/inbox.json`.
-2. The dashboard imports the inbox into a **"to review"** queue, grouped by company and sorted by score.
-3. The user decides in one click: process, prepare to apply, later, or ignore. They track applications, deadlines, contacts, weekly tasks and weekly reviews.
-4. The dashboard autosaves its state to `data/state/dashboard-state.json`.
-5. **Sync** scripts (`workflow/dashboard-sync/`) read that state, record decisions in a ledger, and prune entries the user has already handled from the inbox.
+- **Privacy first.** Never add real personal information: no real names, emails, phone numbers, schools, employers someone applied to, or job IDs. Demo data, tests and docs stay fictional; links use `example.com`, `example.org` or `example.net`.
+- **Local-first.** No backend, accounts, analytics, CDNs, web fonts or any other network request from the app.
+- **No framework, no build step, no runtime dependencies.** The app is plain HTML, CSS and JavaScript; the scripts are Python 3.9+ with only the standard library. Playwright (in `package.json`) is a dev-only tool for screenshots.
+- **Double-clicking `app/index.html` must keep working.** That is why the app uses classic `<script>` tags that share top-level names, not ES modules (browsers block modules on `file://`). New files are added to `app/index.html` in dependency order.
+- **Never commit user data.** `workflow/profile.md` and everything under `data/` (except `data/scout/inbox.example.json`) are git-ignored; keep it that way.
 
-The goal is a polished public GitHub repo that people want to use and share.
+## Where things live
 
-## Current state of the code
+| Path | Contents |
+|---|---|
+| `app/js/model.js` | Vocabulary (stages, statuses, priorities, modes), date helpers, state validation, roll-over. Pure. |
+| `app/js/matching.js`, `app/js/inbox.js` | Search and task–job linking; inbox, revision and research import. Pure. |
+| `app/seed.js` | Fictional demo data, dates relative to today. |
+| `app/js/ui.js`, `app/js/views/*.js`, `app/js/editor.js` | HTML helpers, one file per page, the edit dialog. |
+| `app/js/folder.js`, `app/js/main.js` | Folder sync; app state, saving, events, startup. |
+| `workflow/` | Agent skills (`job-scout`, `dashboard-sync`), the example profile, and the sync scripts. |
+| `tests/js/`, `workflow/dashboard-sync/tests/` | Node and Python tests. |
+| `tools/screenshots.js` | Regenerates `docs/images/` from the demo data. |
 
-- `app/` is the original dashboard with personal data removed. **Its UI text is in Chinese** and the code is dense and minified-looking. `app/seed.js` is an empty dataset.
-- Personal leftovers were stripped: seed-update history (`mergeHandover` now uses an empty `previous`), task-to-job presets (`TASK_JOB_LINKS` is empty), employer profiles, and per-application summary pages. Code that referenced them may now be dead.
-- `workflow/dashboard-sync/` contains working Python scripts with passing tests (`python -m unittest discover -s workflow/dashboard-sync/tests`). They were written for a stricter private scoring contract and use two engine names, `claude` and `codex`.
-- `workflow/profile.example.md` and `workflow/job-scout/SKILL.md` are intentionally minimal examples. Keep them short.
-- `data/scout/inbox.example.json` shows the inbox format the dashboard reads (see `importInbox` in `app/app.js`).
+## Conventions
 
-## Tasks
+- **Pure files stay pure.** `model.js`, `matching.js`, `inbox.js` and `seed.js` must not touch the DOM, so the tests can load them in a Node `vm` context (`tests/js/load.js`). Put new logic there when you can, and test it.
+- **Escape everything.** Views build HTML strings; every value from data goes through `esc()` (or `hl()` for search highlighting).
+- **Events are delegated.** Handlers in `main.js` find their target through `data-*` attributes or a button `id` in `CLICK_ACTIONS`. After changing `state`, call `save()` and then `render()`.
+- **Vocabulary is shared.** If you rename a stage or status in `model.js`, update `STATUS_MAP` in `workflow/dashboard-sync/scripts/sync_decisions.py`, the tests, and `docs/data-formats.md` in the same change.
+- **Data formats are a contract.** Changes to the inbox, state or ledger shape must stay backward compatible or be documented in `docs/data-formats.md`.
+- **Both modes.** Full mode has everything; simple mode hides `SIMPLE_HIDDEN_VIEWS`. Check that a UI change works in both.
+- **Readable over compact.** Short functions, clear names, comments that explain why. UI text is plain English, with US-English dates.
 
-1. **Translate the entire UI to English**: labels, statuses, buttons, empty states, help text, dates (`toLocaleDateString` with `en-US`), and code comments. Translate status values too (e.g. 待浏览 → "To review", 准备申请 → "Preparing", 已投递 → "Applied") and update the sync scripts' `STATUS_MAP` and tests to match. Remove China/U.S. market-specific wording; keep a generic, optional "market" or "region" field.
-2. **Simplify and clean up**: remove dead code left by the stripped features (seed-update merge chain, handover conflicts, channel-coverage panel, chat-decisions import, hard-coded aliases), and generalize engine names (any string, not just claude/codex). Keep the code dependency-free. Readability matters more than compactness: reformat `app.js` into readable code, split it into a few files if that helps.
-3. **Fictional demo data**: fill `app/seed.js` with a believable but clearly fictional dataset (about 12 jobs across all stages, 6 contacts, a week of tasks, one weekly review), based on the example profile. Use made-up companies or obvious placeholders; never use real people. Provide a way to clear demo data and start fresh.
-4. **Make it easy to run**: double-clicking `app/index.html` should work for the basic dashboard. Add a tiny cross-platform way to serve it locally (e.g. `python -m http.server`) for the folder-sync features, and document both.
-5. **Documentation**: a strong `README.md` (what it is, screenshots, quick start, the scout → review → sync workflow, how to plug in any AI agent, privacy model, FAQ), plus `docs/` pages for the data formats (inbox, state, ledger) and architecture. Explain that `workflow/profile.md` and everything under `data/` stay local and are git-ignored.
-6. **Screenshots**: run the app with the demo data in a headless browser (e.g. Playwright) and save screenshots of the main views to `docs/images/`, including one of the review queue. Use them in the README. Commit the script that generates them.
-7. **Quality**: keep the sync tests passing, add tests for any new logic, and add a minimal GitHub Actions workflow that runs them.
+## Before you push
 
-## Rules
+```sh
+node --test "tests/js/*.test.js"
+python -m unittest discover -s workflow/dashboard-sync/tests
+```
 
-- **Privacy first.** Never add real personal information: no real names, emails, phone numbers, schools, employers someone applied to, or job IDs. Everything in demo data and docs must be fictional.
-- Keep the app local-first: no backend, no accounts, no analytics, no external network calls from the app.
-- Do not add a framework or build step.
-- Work on a branch and open a pull request describing what changed and anything left undone.
+Both must pass; CI (`.github/workflows/tests.yml`) runs them on Linux and Windows. If you change how a page looks, open `app/index.html` in a browser to check it, and regenerate the screenshots with `npm run screenshots` when the README images would be out of date. Work on a branch and open a pull request.
