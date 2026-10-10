@@ -35,7 +35,7 @@ Not interested in planning your week inside the dashboard? Switch to **simple mo
 
 ## Quick start
 
-**Just look around:** download or clone this repository and double-click `app/index.html`. It opens with fictional demo data; clear it from the banner at the top when you are ready to start.
+**Just look around:** download this repository (green **Code** button → **Download ZIP**, then unzip) or clone it, and double-click `app/index.html`. It opens with fictional demo data; clear it from the banner at the top when you are ready to start.
 
 ```sh
 git clone https://github.com/FanqiWang/job-search-dashboard.git
@@ -48,7 +48,13 @@ cd job-search-dashboard
 python serve.py          # or: python3 serve.py
 ```
 
-This opens <http://localhost:8765/app/>. Go to **Data → Connect folder** and pick the `job-search-dashboard` folder. From then on the dashboard saves its state to `data/state/dashboard-state.json` and picks up new jobs from `data/scout/`.
+This opens <http://localhost:8765/app/> (open it yourself if no browser window appears). Then:
+
+1. Go to **Data** and click **Clear demo data and start fresh**. Folder sync stays paused while demo data is loaded, so demo jobs never reach your files.
+2. Click **Connect folder**, pick the `job-search-dashboard` folder (the one that contains `app/` and `data/`), and allow access.
+3. Make any change, for example add a job. A file `data/state/dashboard-state.json` appears in the folder: sync is working. From then on the dashboard saves every change there and picks up new jobs from `data/scout/`.
+
+The browser asks for permission again on each visit; click **Allow folder access** in the banner. Stop the server with `Ctrl+C`. No Python yet? Install it from [python.org](https://www.python.org/downloads/) (on Windows, tick "Add Python to PATH").
 
 `serve.py` uses only Python's standard library, listens on `127.0.0.1` only, and works on Windows, macOS and Linux. Any static server will do if you prefer, as long as it serves the repository root on `localhost` (for example `python -m http.server 8765 --bind 127.0.0.1`, then open `/app/`).
 
